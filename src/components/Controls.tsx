@@ -44,7 +44,8 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         paddingHorizontal: 32,
         borderRadius: 20,
-        minWidth: 140,
+        // minWidth: 140, // Removed to prevent clipping on large fonts
+        minWidth: 120,
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: "#000",

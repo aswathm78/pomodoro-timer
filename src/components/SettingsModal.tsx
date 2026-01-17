@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     },
     button: {
         flex: 1,
-        padding: 12,
+        padding: 10,
         borderRadius: 8,
         alignItems: 'center',
     },

@@ -143,12 +143,18 @@ export const useTimer = (
 
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
-        if (isActive && timeLeft > 0) {
-            interval = setInterval(() => {
-                setTimeLeft((prev) => prev - 1);
-            }, 1000);
-        } else if (timeLeft === 0 && isActive) {
-            switchMode();
+        if (isActive) {
+            if (timeLeft > 0) {
+                interval = setInterval(() => {
+                    setTimeLeft((prev) => prev - 1);
+                }, 1000);
+            } else {
+                // Wait 1 second on 00:00 before switching
+                const timeout = setTimeout(() => {
+                    switchMode();
+                }, 1000);
+                return () => clearTimeout(timeout);
+            }
         }
         return () => {
             if (interval) clearInterval(interval);
