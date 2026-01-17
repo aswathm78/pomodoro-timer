@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors } from '../constants/Colors';
-import { Ionicons } from '@expo/vector-icons'; // Assuming Ionicons is available, if not standard Text is fine but Icon would be better. 
 // Note: expo-vector-icons is standard in managed workflow. I will stick to Text for guaranteed safety unless I check package.json, 
 // but actually standard expo template includes it. I'll stick to text buttons with better styling as requested in plan to be safe or minimal.
 // Let's use text but styled purely.
@@ -12,7 +11,7 @@ interface ControlsProps {
     onReset: () => void;
 }
 
-export const Controls: React.FC<ControlsProps> = ({ isActive, onToggle, onReset }) => {
+export const Controls: React.FC<ControlsProps> = React.memo(({ isActive, onToggle, onReset }) => {
     return (
         <View style={styles.container}>
             <TouchableOpacity
@@ -31,7 +30,7 @@ export const Controls: React.FC<ControlsProps> = ({ isActive, onToggle, onReset 
             </TouchableOpacity>
         </View>
     );
-};
+});
 
 const styles = StyleSheet.create({
     container: {

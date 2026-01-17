@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Dimensions, Animated, Easing } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
 
@@ -13,6 +13,7 @@ interface TimerProps {
     timeLeft: number;
     totalTime: number;
     mode: 'work' | 'break' | 'longBreak';
+    isActive: boolean;
 }
 
 const formatTime = (time: number) => {
@@ -21,11 +22,36 @@ const formatTime = (time: number) => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
-export const Timer: React.FC<TimerProps> = ({ timeLeft, totalTime, mode }) => {
+export const Timer: React.FC<TimerProps> = React.memo(({ timeLeft, totalTime, mode, isActive }) => {
     const progress = timeLeft / totalTime;
     const strokeDashoffset = circumference - progress * circumference;
 
     const color = mode === 'work' ? Colors.primary : Colors.secondary;
+    const pulseAnim = useRef(new Animated.Value(1)).current;
+
+    useEffect(() => {
+        if (isActive) {
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(pulseAnim, {
+                        toValue: 0.8,
+                        duration: 1000,
+                        useNativeDriver: true,
+                        easing: Easing.inOut(Easing.ease),
+                    }),
+                    Animated.timing(pulseAnim, {
+                        toValue: 1,
+                        duration: 1000,
+                        useNativeDriver: true,
+                        easing: Easing.inOut(Easing.ease),
+                    }),
+                ])
+            ).start();
+        } else {
+            pulseAnim.setValue(1);
+            pulseAnim.stopAnimation();
+        }
+    }, [isActive, pulseAnim]);
 
     const getModeText = () => {
         switch (mode) {
@@ -63,12 +89,14 @@ export const Timer: React.FC<TimerProps> = ({ timeLeft, totalTime, mode }) => {
                 />
             </Svg>
             <View style={styles.timeContainer}>
-                <Text style={[styles.timeText, { color }]}>{formatTime(timeLeft)}</Text>
+                <Animated.Text style={[styles.timeText, { color, opacity: pulseAnim }]}>
+                    {formatTime(timeLeft)}
+                </Animated.Text>
                 <Text style={styles.modeText}>{getModeText()}</Text>
             </View>
         </View>
     );
-};
+});
 
 const styles = StyleSheet.create({
     container: {
@@ -83,7 +111,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     timeText: {
-        fontSize: 72,
+        fontSize: 56,
         fontWeight: 'bold',
         fontVariant: ['tabular-nums'],
     },

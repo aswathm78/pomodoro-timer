@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, Switch, ScrollView } from 'react-native';
 import { Colors } from '../constants/Colors';
 
 interface SettingsModalProps {
@@ -7,7 +7,10 @@ interface SettingsModalProps {
     onClose: () => void;
     workTime: number;
     breakTime: number;
-    onSave: (work: number, breakTime: number) => void;
+    longBreakTime: number;
+    keepScreenOn: boolean;
+    backgroundSound: string; // 'none' | 'rain' | 'white_noise'
+    onSave: (settings: { work: number; breakVal: number; longBreak: number; screenOn: boolean; sound: string }) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -15,19 +18,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     onClose,
     workTime,
     breakTime,
+    longBreakTime,
+    keepScreenOn,
+    backgroundSound,
     onSave,
 }) => {
     const [work, setWork] = useState(String(Math.floor(workTime / 60)));
     const [breakVal, setBreakVal] = useState(String(Math.floor(breakTime / 60)));
+    const [longBreak, setLongBreak] = useState(String(Math.floor(longBreakTime / 60)));
+    const [screenOn, setScreenOn] = useState(keepScreenOn);
+    const [sound, setSound] = useState(backgroundSound);
 
     const handleSave = () => {
         const w = parseInt(work, 10);
         const b = parseInt(breakVal, 10);
-        if (!isNaN(w) && !isNaN(b)) {
-            onSave(w * 60, b * 60);
+        const lb = parseInt(longBreak, 10);
+        if (!isNaN(w) && !isNaN(b) && !isNaN(lb)) {
+            onSave({
+                work: w * 60,
+                breakVal: b * 60,
+                longBreak: lb * 60,
+                screenOn,
+                sound,
+            });
             onClose();
         }
     };
+
+    const sounds = [
+        { id: 'none', label: 'None' },
+        { id: 'rain', label: 'Rain' },
+        { id: 'white_noise', label: 'White Noise' },
+    ];
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
@@ -35,27 +57,71 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <View style={styles.modalContent}>
                     <Text style={styles.title}>Settings</Text>
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Focus Duration (min)</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={work}
-                            onChangeText={setWork}
-                            keyboardType="number-pad"
-                            placeholderTextColor="#666"
-                        />
-                    </View>
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Focus Duration (min)</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={work}
+                                onChangeText={setWork}
+                                keyboardType="number-pad"
+                                placeholderTextColor="#666"
+                            />
+                        </View>
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Break Duration (min)</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={breakVal}
-                            onChangeText={setBreakVal}
-                            keyboardType="number-pad"
-                            placeholderTextColor="#666"
-                        />
-                    </View>
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Break Duration (min)</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={breakVal}
+                                onChangeText={setBreakVal}
+                                keyboardType="number-pad"
+                                placeholderTextColor="#666"
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Long Break Duration (min)</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={longBreak}
+                                onChangeText={setLongBreak}
+                                keyboardType="number-pad"
+                                placeholderTextColor="#666"
+                            />
+                        </View>
+
+                        <View style={styles.rowContainer}>
+                            <Text style={styles.label}>Keep Screen On</Text>
+                            <Switch
+                                value={screenOn}
+                                onValueChange={setScreenOn}
+                                trackColor={{ false: '#444', true: Colors.primary }}
+                                thumbColor={screenOn ? '#fff' : '#f4f3f4'}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Background Sound</Text>
+                            <View style={styles.soundButtons}>
+                                {sounds.map((s) => (
+                                    <TouchableOpacity
+                                        key={s.id}
+                                        style={[
+                                            styles.soundButton,
+                                            sound === s.id && styles.activeSoundButton,
+                                        ]}
+                                        onPress={() => setSound(s.id)}
+                                    >
+                                        <Text style={[
+                                            styles.soundButtonText,
+                                            sound === s.id && styles.activeSoundButtonText
+                                        ]}>{s.label}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+                    </ScrollView>
 
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity onPress={onClose} style={[styles.button, styles.cancelButton]}>
@@ -79,7 +145,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContent: {
-        width: '80%',
+        width: '85%',
+        maxHeight: '80%',
         backgroundColor: Colors.surface,
         padding: 20,
         borderRadius: 15,
@@ -94,6 +161,12 @@ const styles = StyleSheet.create({
     inputContainer: {
         marginBottom: 15,
     },
+    rowContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
     label: {
         color: Colors.text,
         marginBottom: 5,
@@ -106,6 +179,31 @@ const styles = StyleSheet.create({
         fontSize: 16,
         borderWidth: 1,
         borderColor: '#444',
+    },
+    soundButtons: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
+        marginTop: 5,
+    },
+    soundButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#444',
+    },
+    activeSoundButton: {
+        backgroundColor: Colors.primary,
+        borderColor: Colors.primary,
+    },
+    soundButtonText: {
+        color: Colors.text,
+        fontSize: 14,
+    },
+    activeSoundButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
     },
     buttonContainer: {
         flexDirection: 'row',
