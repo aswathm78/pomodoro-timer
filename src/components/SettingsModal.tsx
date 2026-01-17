@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, Switch, ScrollView } from 'react-native';
 import { Colors } from '../constants/Colors';
+import { BACKGROUND_SOUNDS } from '../constants/Sounds';
 
 interface SettingsModalProps {
     visible: boolean;
@@ -45,11 +46,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         }
     };
 
-    const sounds = [
-        { id: 'none', label: 'None' },
-        { id: 'rain', label: 'Rain' },
-        { id: 'white_noise', label: 'White Noise' },
-    ];
+    const sounds = Object.values(BACKGROUND_SOUNDS).map(s => ({ id: s.id, label: s.name }));
 
     return (
         <Modal visible={visible} animationType="slide" transparent>

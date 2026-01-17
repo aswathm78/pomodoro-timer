@@ -3,12 +3,11 @@ import { useAudioPlayer, AudioSource } from 'expo-audio';
 import { Vibration, Platform } from 'react-native';
 import { sendNotification } from '../services/Notifications';
 import Constants from 'expo-constants';
+import { BACKGROUND_SOUNDS, NOTIFICATION_SOUNDS } from '../constants/Sounds';
 
 type TimerMode = 'work' | 'break' | 'longBreak';
 
-const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3';
-const RAIN_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2515/2515-preview.mp3';
-const WHITE_NOISE_URL = 'https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3';
+
 
 export const useTimer = (
     workDuration: number,
@@ -23,15 +22,22 @@ export const useTimer = (
     const [sessionsCompleted, setSessionsCompleted] = useState(0);
 
     // Audio Players
-    const notificationPlayer = useAudioPlayer(NOTIFICATION_SOUND_URL);
-    const rainPlayer = useAudioPlayer(RAIN_SOUND_URL);
-    const whiteNoisePlayer = useAudioPlayer(WHITE_NOISE_URL);
+    // Audio Players
+    const notificationPlayer = useAudioPlayer(NOTIFICATION_SOUNDS.bell.url);
+    const rainPlayer = useAudioPlayer(BACKGROUND_SOUNDS.rain.url);
+    const whiteNoisePlayer = useAudioPlayer(BACKGROUND_SOUNDS.white_noise.url);
+    const forestPlayer = useAudioPlayer(BACKGROUND_SOUNDS.forest.url);
+    const cafePlayer = useAudioPlayer(BACKGROUND_SOUNDS.cafe.url);
+    const gammaPlayer = useAudioPlayer(BACKGROUND_SOUNDS.gamma.url);
 
     useEffect(() => {
         // Configure looping for background sounds
         rainPlayer.loop = true;
         whiteNoisePlayer.loop = true;
-    }, [rainPlayer, whiteNoisePlayer]);
+        forestPlayer.loop = true;
+        cafePlayer.loop = true;
+        gammaPlayer.loop = true;
+    }, [rainPlayer, whiteNoisePlayer, forestPlayer, cafePlayer, gammaPlayer]);
 
     // Sync duration
     useEffect(() => {
@@ -48,14 +54,23 @@ export const useTimer = (
             // Pause all first
             if (rainPlayer.playing) await rainPlayer.pause();
             if (whiteNoisePlayer.playing) await whiteNoisePlayer.pause();
+            if (forestPlayer.playing) await forestPlayer.pause();
+            if (cafePlayer.playing) await cafePlayer.pause();
+            if (gammaPlayer.playing) await gammaPlayer.pause();
 
             if (isActive && mode === 'work') {
-                if (backgroundSoundType === 'rain') {
-                    rainPlayer.volume = 0.5;
-                    rainPlayer.play();
-                } else if (backgroundSoundType === 'white_noise') {
-                    whiteNoisePlayer.volume = 0.5;
-                    whiteNoisePlayer.play();
+                const playerMap: Record<string, any> = {
+                    rain: rainPlayer,
+                    white_noise: whiteNoisePlayer,
+                    forest: forestPlayer,
+                    cafe: cafePlayer,
+                    gamma: gammaPlayer
+                };
+
+                const player = playerMap[backgroundSoundType];
+                if (player) {
+                    player.volume = 0.5;
+                    player.play();
                 }
             }
         };
@@ -65,7 +80,7 @@ export const useTimer = (
         return () => {
             // We can't easily wait here in cleanup, but effect re-run handles it
         };
-    }, [isActive, mode, backgroundSoundType, rainPlayer, whiteNoisePlayer]);
+    }, [isActive, mode, backgroundSoundType, rainPlayer, whiteNoisePlayer, forestPlayer, cafePlayer, gammaPlayer]);
 
     const playNotificationSound = async () => {
         try {
